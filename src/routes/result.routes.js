@@ -5,12 +5,16 @@ import {
   getAllResultsAdmin,
   publishTestResults,
   publishAllResults,
-  scheduleResultRelease
+  scheduleResultRelease,
+  getLatestStatus
 } from '../controllers/result.controller.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/role.js';
 
 const router = express.Router();
+
+// Public route for Vercel HTTP polling fallback
+router.get('/latest-status', getLatestStatus);
 
 router.use(protect);
 

@@ -5,7 +5,8 @@ let io;
 export const initializeSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: [process.env.FRONTEND_URL || 'http://localhost:5173'], // Allows any origin, restrict in production
+      origin: true, // Dynamically allows any origin (Vercel preview/production/localhost)
+      credentials: true,
       methods: ['GET', 'POST']
     }
   });
@@ -21,7 +22,10 @@ export const initializeSocket = (server) => {
 
 export const getIO = () => {
   if (!io) {
-    throw new Error('Socket.io not initialized!');
+    console.log('[Serverless IO] Socket.io not initialized in this environment. Returning mock emitter.');
+    return {
+      emit: (event, data) => console.log(`[Serverless Mock IO] Event '${event}' broadcast suppressed in serverless container.`)
+    };
   }
   return io;
 };

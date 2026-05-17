@@ -242,3 +242,25 @@ export const autoPublishDueResults = async () => {
     console.error('[AutoPublish] Error:', err.message);
   }
 };
+
+/* ════════════════════════════
+   STUDENT / SYSTEM — get latest published status for polling fallback
+   Used by Vercel frontend to replace Socket.io reconnect loops
+════════════════════════════ */
+export const getLatestStatus = async (req, res, next) => {
+  try {
+    const latestPublished = await ExamAttempt.findOne({ isPublished: true })
+      .sort({ publishDate: -1, updatedAt: -1 })
+      .select('publishDate updatedAt')
+      .lean();
+
+    const publishedCount = await ExamAttempt.countDocuments({ isPublished: true, attemptStatus: 'completed' });
+
+    sendResponse(res, 200, true, 'Latest status retrieved', {
+      lastPublishedAt: latestPublished ? (latestPublished.publishDate || latestPublished.updatedAt) : null,
+      publishedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+};
