@@ -38,6 +38,16 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/payments', paymentRoutes);
 
+// Root route for Vercel deployment check
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'MDCAT Backend API is running successfully on Vercel!',
+    version: '1.0.0',
+    documentation: 'Visit /health to check server health status.'
+  });
+});
+
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'success', message: 'API is running smoothly' });
