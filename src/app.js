@@ -15,11 +15,12 @@ import paymentRoutes from './routes/payment.routes.js';
 const app = express();
 
 // Middlewares
-app.use(cors(
-  {
-    baseURL: process.env.FRONTEND_URL || 'http://localhost:',
-  }
-));
+app.use(cors({
+  origin: true, // Dynamically allows any Vercel preview/production origin
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
