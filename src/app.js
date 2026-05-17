@@ -49,6 +49,14 @@ app.get('/', (req, res) => {
   });
 });
 
+// Handle Socket.io polling fallback in Vercel Serverless environment to prevent scary CORS/404 console errors
+app.use('/socket.io', (req, res) => {
+  res.status(200).json({
+    code: 0,
+    message: "WebSockets not supported in Vercel Serverless environment."
+  });
+});
+
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'success', message: 'API is running smoothly' });
