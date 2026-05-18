@@ -6,8 +6,35 @@ let dbConnected = false;
 export default async (req, res) => {
   // 1. Attach CORS headers immediately to the Vercel Serverless Response object
   // This ensures that even if DB connection fails or OPTIONS preflight is requested, CORS headers are always present.
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
+  const origin = req.headers.origin;
+
+  const getBaseOrigin = (url) => {
+    if (!url) return '';
+    try {
+      const parsed = new URL(url);
+      return `${parsed.protocol}//${parsed.host}`;
+    } catch (err) {
+      return url.replace(/\/$/, '');
+    }
+  };
+
+  const allowedOrigins = [
+    getBaseOrigin(process.env.FRONTEND_URL),
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ].filter(Boolean);
+
+  let allowedOrigin = '*';
+  if (origin) {
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      origin.endsWith('.vercel.app') || 
+                      process.env.NODE_ENV === 'development';
+    if (isAllowed) {
+      allowedOrigin = origin;
+    }
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader(

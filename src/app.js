@@ -14,9 +14,40 @@ import paymentRoutes from './routes/payment.routes.js';
 
 const app = express();
 
+// Helper to extract base origin from a URL (e.g. extracts 'https://mdcat-frontend.vercel.app' from 'https://mdcat-frontend.vercel.app/login')
+const getBaseOrigin = (url) => {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch (err) {
+    return url.replace(/\/$/, '');
+  }
+};
+
+// Configured allowed origins
+const allowedOrigins = [
+  getBaseOrigin(process.env.FRONTEND_URL),
+  'http://localhost:5173',
+  'http://localhost:3000'
+].filter(Boolean);
+
 // Middlewares
 app.use(cors({
-  origin: true, // Dynamically allows any Vercel preview/production origin
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      origin.endsWith('.vercel.app') || 
+                      process.env.NODE_ENV === 'development';
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
