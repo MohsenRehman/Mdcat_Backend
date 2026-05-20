@@ -64,6 +64,10 @@ const userSchema = new mongoose.Schema({
   registrationYear: {
     type: Number
   },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
   resetPasswordToken: String,
   resetPasswordExpire: Date
 }, {

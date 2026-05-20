@@ -105,7 +105,7 @@ export const getResultById = async (req, res, next) => {
 export const getAllResultsAdmin = async (req, res, next) => {
   try {
     const results = await ExamAttempt.find()
-      .populate('user', 'name email')
+      .populate('user', 'name email profilePicture')
       .populate('subject', 'name')
       .sort('-createdAt')
       .lean();

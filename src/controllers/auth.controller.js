@@ -86,6 +86,26 @@ export const getMe = async (req, res, next) => {
   }
 };
 
+export const updateProfilePicture = async (req, res, next) => {
+  try {
+    const { profilePicture } = req.body;
+    
+    if (!profilePicture) {
+      return sendResponse(res, 400, false, 'Please provide a profile picture');
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePicture },
+      { new: true, runValidators: true }
+    );
+
+    sendResponse(res, 200, true, 'Profile picture updated successfully', user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const adminLogin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
