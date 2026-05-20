@@ -148,8 +148,11 @@ export const forgotPassword = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // Create reset url
-    const resetUrl = `${process.env.CLIENT_URL || process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    // Create reset url with auto-sanitization to prevent malformed links (e.g. if CLIENT_URL has /login at the end)
+    let clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    clientUrl = clientUrl.trim().replace(/\/+$/, '').replace(/\/login$/, '').replace(/\/+$/, '');
+    
+    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
