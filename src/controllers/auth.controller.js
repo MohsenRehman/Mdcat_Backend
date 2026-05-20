@@ -4,7 +4,6 @@ import crypto from 'crypto';
 import { sendResponse } from '../utils/response.js';
 import { generateRollNumber } from '../utils/rollNumberGenerator.js';
 import sendEmail from '../utils/sendEmail.js';
-import MockEmail from '../models/MockEmail.js';
 
 // Generate JWT
 const generateToken = (id) => {
@@ -166,16 +165,7 @@ export const forgotPassword = async (req, res, next) => {
       </div>
     `;
 
-    // Save to MockEmail model for the developer-only simulated inbox
-    try {
-      await MockEmail.create({
-        to: user.email,
-        subject: 'Password Reset Token',
-        html
-      });
-    } catch (dbErr) {
-      console.error('Failed to save mock email to MongoDB:', dbErr.message);
-    }
+    // Send the email using the configured SMTP transporter
 
     try {
       await sendEmail({
@@ -184,11 +174,16 @@ export const forgotPassword = async (req, res, next) => {
         html
       });
 
-      sendResponse(res, 200, true, 'Email sent');
+      sendResponse(res, 200, true, 'Email sent successfully');
     } catch (err) {
-      console.warn('Real SMTP delivery failed, falling back to simulated email sandbox:', err.message);
-      // In development or if SMTP is unconfigured, we proceed so local/dev verification works.
-      sendResponse(res, 200, true, 'Email sent (simulated)');
+      console.error('SMTP Delivery Failed:', err.message);
+      
+      // Clean up token on email failure
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return sendResponse(res, 500, false, 'Failed to send reset email. Please try again later.');
     }
   } catch (error) {
     next(error);
@@ -224,30 +219,6 @@ export const resetPassword = async (req, res, next) => {
     sendResponse(res, 200, true, 'Password updated successfully', {
       token: generateToken(user._id)
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Get mock emails (Development/Testing only)
-// @route   GET /api/auth/mock-emails
-// @access  Public (Dev mode)
-export const getMockEmails = async (req, res, next) => {
-  try {
-    const emails = await MockEmail.find().sort({ createdAt: -1 });
-    sendResponse(res, 200, true, 'Mock emails retrieved successfully', emails);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Clear all mock emails (Development/Testing only)
-// @route   DELETE /api/auth/mock-emails
-// @access  Public (Dev mode)
-export const deleteMockEmails = async (req, res, next) => {
-  try {
-    await MockEmail.deleteMany({});
-    sendResponse(res, 200, true, 'Mock emails cleared successfully');
   } catch (error) {
     next(error);
   }
